@@ -5,19 +5,23 @@
     <title>Hydrotrack Dashboard & Login</title>
     <style>
         body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #fafafa; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 340px; text-align: center; }
-        .admin-panel { width: 500px; display: none; text-align: left; }
-        h2, h3 { margin-bottom: 20px; color: #333; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 360px; text-align: center; }
+        .panel { width: 500px; display: none; text-align: left; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2, h3 { margin-bottom: 20px; color: #333; text-align: center; }
+        .panel h2, .panel h3 { text-align: left; }
+        input { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         button { width: 100%; padding: 12px; background: #000; color: white; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 12px; font-size: 14px; }
         button:hover { background: #222; }
         button.admin-btn { background: #007bff; }
         button.admin-btn:hover { background: #0056b3; }
-        button.logout-btn { background: #dc3545; }
+        button.logout-btn { background: #dc3545; margin-top: 20px; }
         button.logout-btn:hover { background: #bd2130; }
         .error { color: #ff3b30; font-size: 14px; margin-top: 12px; min-height: 20px; text-align: center; }
         ul { list-style: none; padding: 0; }
-        li { background: #eee; padding: 8px; margin: 4px 0; border-radius: 4px; display: flex; justify-content: space-between; font-size: 14px; }
+        li { background: #eee; padding: 10px; margin: 6px 0; border-radius: 4px; font-size: 13px; line-height: 1.4; }
+        .profile-data { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #007bff; margin-bottom: 15px; }
+        .profile-data p { margin: 8px 0; font-size: 16px; color: #444; }
+        .profile-data strong { color: #000; }
     </style>
 </head>
 <body>
@@ -31,26 +35,48 @@
         <div class="error" id="error-message"></div>
     </div>
 
-    <!-- 2. ADMIN DASHBOARD -->
-    <div class="card admin-panel" id="admin-dashboard">
-        <h2>Hydrotrack Admin Dashboard</h2>
-        <p>Welcome, Admin! Create new login credentials on the spot below:</p>
+    <!-- 2. STANDARD USER PROFILE PAGE (Each user sees their own info) -->
+    <div class="panel" id="user-profile-page">
+        <h2>User Profile Dashboard</h2>
+        <p>Welcome back, <span id="display-username" style="font-weight: bold; color: #007bff;"></span>!</p>
         
-        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3>Create New User</h3>
-            <input type="text" id="new-username" placeholder="Enter New Username">
-            <input type="password" id="new-password" placeholder="Enter New Password">
-            <button class="admin-btn" onclick="createUser()">Add User Credentials</button>
+        <div class="profile-data">
+            <p><strong>Name:</strong> <span id="view-name"></span></p>
+            <p><strong>School:</strong> <span id="view-school"></span></p>
+            <p><strong>Class:</strong> <span id="view-class"></span></p>
+            <p><strong>Number:</strong> <span id="view-number"></span></p>
+            <p><strong>Address:</strong> <span id="view-address"></span></p>
         </div>
 
-        <h3>Active Users List</h3>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- 3. ADMIN DASHBOARD -->
+    <div class="panel" id="admin-dashboard">
+        <h2>Hydrotrack Admin Dashboard</h2>
+        <p>Welcome, Admin! Create custom accounts below:</p>
+        
+        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #fdfdfd;">
+            <h3>Create New User Credentials & Profile</h3>
+            <input type="text" id="new-username" placeholder="Login Username">
+            <input type="password" id="new-password" placeholder="Login Password">
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 15px 0;">
+            <input type="text" id="new-name" placeholder="Full Name">
+            <input type="text" id="new-school" placeholder="School Name">
+            <input type="text" id="new-class" placeholder="Class">
+            <input type="text" id="new-number" placeholder="Phone Number / Roll Number">
+            <input type="text" id="new-address" placeholder="Home Address">
+            <button class="admin-btn" onclick="createUser()">Add Custom User</button>
+        </div>
+
+        <h3>Active Users Database</h3>
         <ul id="users-list"></ul>
 
         <button class="logout-btn" onclick="logout()">Logout Admin</button>
     </div>
 
     <script>
-        // MASTER ADMIN CREDENTIALS (CHANGE THESE IF YOU WANT)
+        // MASTER ADMIN CREDENTIALS
         const ADMIN_USER = "admin";
         const ADMIN_PASS = "admin123";
 
@@ -59,8 +85,8 @@
         }
 
         function checkLogin() {
-            const userIn = document.getElementById('login-username').value;
-            const passIn = document.getElementById('login-password').value;
+            const userIn = document.getElementById('login-username').value.trim();
+            const passIn = document.getElementById('login-password').value.trim();
             const errorMsg = document.getElementById('error-message');
 
             if (userIn === ADMIN_USER && passIn === ADMIN_PASS) {
@@ -72,36 +98,58 @@
             const foundUser = users.find(u => u.username === userIn && u.password === passIn);
 
             if (foundUser) {
-                alert(`Success! Logged in as: ${userIn}`);
-                logout(); 
+                // Show the standard user profile screen with their specific data
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('user-profile-page').style.display = 'block';
+                
+                // Inject their individual data into the page
+                document.getElementById('display-username').innerText = foundUser.username;
+                document.getElementById('view-name').innerText = foundUser.name || "N/A";
+                document.getElementById('view-school').innerText = foundUser.school || "N/A";
+                document.getElementById('view-class').innerText = foundUser.class || "N/A";
+                document.getElementById('view-number').innerText = foundUser.number || "N/A";
+                document.getElementById('view-address').innerText = foundUser.address || "N/A";
             } else {
                 errorMsg.innerText = "Invalid credentials. Try again.";
             }
         }
 
         function createUser() {
-            const newU = document.getElementById('new-username').value.trim();
-            const newP = document.getElementById('new-password').value.trim();
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+            const name = document.getElementById('new-name').value.trim();
+            const school = document.getElementById('new-school').value.trim();
+            const uClass = document.getElementById('new-class').value.trim();
+            const number = document.getElementById('new-number').value.trim();
+            const address = document.getElementById('new-address').value.trim();
 
-            if (!newU || !newP) {
-                alert("Please fill out both fields!");
+            if (!username || !password) {
+                alert("Username and Password are required!");
                 return;
             }
 
             const users = JSON.parse(localStorage.getItem('registeredUsers'));
             
-            if (users.some(u => u.username === newU) || newU === ADMIN_USER) {
+            if (users.some(u => u.username === username) || username === ADMIN_USER) {
                 alert("This username already exists!");
                 return;
             }
 
-            users.push({ username: newU, password: newP });
+            // Save the user credentials along with their specific information
+            users.push({ username, password, name, school, class: uClass, number, address });
             localStorage.setItem('registeredUsers', JSON.stringify(users));
 
+            // Clear inputs
             document.getElementById('new-username').value = "";
             document.getElementById('new-password').value = "";
+            document.getElementById('new-name').value = "";
+            document.getElementById('new-school').value = "";
+            document.getElementById('new-class').value = "";
+            document.getElementById('new-number').value = "";
+            document.getElementById('new-address').value = "";
+            
             renderUsersList();
-            alert(`User "${newU}" created successfully!`);
+            alert(`Account for "${username}" created successfully!`);
         }
 
         function renderUsersList() {
@@ -111,7 +159,8 @@
             
             users.forEach(u => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span><strong>User:</strong> ${u.username}</span> <span><strong>Pass:</strong> ${u.password}</span>`;
+                li.innerHTML = `<b>User:</b> ${u.username} | <b>Pass:</b> ${u.password}<br>
+                                <span>Name: ${u.name} | School: ${u.school} | Class: ${u.class} | No: ${u.number} | Addr: ${u.address}</span>`;
                 listElement.appendChild(li);
             });
         }
@@ -127,6 +176,7 @@
             document.getElementById('login-password').value = "";
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('user-profile-page').style.display = 'none';
             document.getElementById('error-message').innerText = "";
         }
     </script>
