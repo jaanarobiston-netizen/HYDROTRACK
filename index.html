@@ -35,7 +35,7 @@
         <div class="error" id="error-message"></div>
     </div>
 
-    <!-- 2. STANDARD USER PROFILE PAGE (Each user sees their own info) -->
+    <!-- 2. STANDARD USER PROFILE PAGE -->
     <div class="panel" id="user-profile-page">
         <h2>User Profile Dashboard</h2>
         <p>Welcome back, <span id="display-username" style="font-weight: bold; color: #007bff;"></span>!</p>
@@ -76,7 +76,6 @@
     </div>
 
     <script>
-        // MASTER ADMIN CREDENTIALS
         const ADMIN_USER = "admin";
         const ADMIN_PASS = "admin123";
 
@@ -98,11 +97,9 @@
             const foundUser = users.find(u => u.username === userIn && u.password === passIn);
 
             if (foundUser) {
-                // Show the standard user profile screen with their specific data
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('user-profile-page').style.display = 'block';
                 
-                // Inject their individual data into the page
                 document.getElementById('display-username').innerText = foundUser.username;
                 document.getElementById('view-name').innerText = foundUser.name || "N/A";
                 document.getElementById('view-school').innerText = foundUser.school || "N/A";
@@ -135,11 +132,9 @@
                 return;
             }
 
-            // Save the user credentials along with their specific information
             users.push({ username, password, name, school, class: uClass, number, address });
             localStorage.setItem('registeredUsers', JSON.stringify(users));
 
-            // Clear inputs
             document.getElementById('new-username').value = "";
             document.getElementById('new-password').value = "";
             document.getElementById('new-name').value = "";
